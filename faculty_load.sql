@@ -83,4 +83,4 @@ LEFT JOIN saturn.stvdept m
       AND a.sirasgn_posn NOT LIKE 'GNC%'
  ORDER BY a.sirasgn_pidm,
              a.sirasgn_term_code,
-             a.sirasgn_crn;
+             a.sirasgn_crn
