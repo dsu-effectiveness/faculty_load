@@ -1,4 +1,4 @@
-# faculty_load
+# Faculty Load Repo
 This repo contains all official sql scripts pertaining to faculty load.
 
 ### faulty_load
