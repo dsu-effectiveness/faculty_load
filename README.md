@@ -75,11 +75,7 @@ This query pulls all relevant information having to do with a faculty member's w
 <tr class="odd">
 <td>course number</td>
 <td>sirasgn</td>
-<td>
-- Item 1
-- Item 2
-- Item 3
-</td>
+<td></td>
 </tr>
 <tr class="even">
 <td>crn</td>
