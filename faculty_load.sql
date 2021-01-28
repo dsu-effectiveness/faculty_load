@@ -1,23 +1,23 @@
-   SELECT b.spriden_id banner_id,
-          b.spriden_first_name first_name,
-          b.spriden_last_name last_name,
+   SELECT b.spriden_id AS banner_id,
+          b.spriden_first_name AS first_name,
+          b.spriden_last_name AS last_name,
           CASE WHEN i.ptrtenr_code IN ('T', 'O') THEN i.ptrtenr_desc
                ELSE g.ptrecls_long_desc
-                END instructor_status,
-          k.perfasg_percent_response repsonsibility_percentage,
+                END AS instructor_status,
+          k.perfasg_percent_response AS repsonsibility_percentage,
           CASE WHEN e.nbrbjob_contract_type IS NULL THEN NULL
                WHEN e.nbrbjob_contract_type = 'O' THEN 1
                ELSE 0
-                END overload_indicator,
-          a.sirasgn_term_code term_code,
-          a.sirasgn_crn crn,
-          c.ssbsect_crse_numb course_number,
-          c.ssbsect_seq_numb section_number,
-          j.scbcrse_title course_title,
-          l.stvcoll_desc college,
-          m.stvdept_desc department,
-          c.ssbsect_enrl student_count,
-          c.ssbsect_tot_credit_hrs total_enrolled_credit_hours
+                END AS overload_indicator,
+          d.stvterm_desc AS term,
+          a.sirasgn_crn AS crn,
+          c.ssbsect_crse_numb AS course_number,
+          c.ssbsect_seq_numb AS section_number,
+          j.scbcrse_title AS course_title,
+          l.stvcoll_desc AS college,
+          m.stvdept_desc AS department,
+          c.ssbsect_enrl AS student_count,
+          c.ssbsect_tot_credit_hrs AS total_enrolled_credit_hours
      FROM saturn.sirasgn a
 LEFT JOIN saturn.spriden b
        ON b.spriden_pidm = a.sirasgn_pidm
@@ -83,4 +83,4 @@ LEFT JOIN saturn.stvdept m
       AND a.sirasgn_posn NOT LIKE 'GNC%'
  ORDER BY a.sirasgn_pidm,
              a.sirasgn_term_code,
-             a.sirasgn_crn
+             a.sirasgn_crn;
