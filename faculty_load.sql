@@ -13,6 +13,16 @@
           a.sirasgn_crn AS crn,
           c.ssbsect_crse_numb AS course_number,
           c.ssbsect_seq_numb AS section_number,
+          CASE SUBSTR(c.ssbsect_crse_numb, 1, 1)
+               WHEN '0' THEN 'Remedial'
+               WHEN '1' THEN 'Lower'
+               WHEN '2' THEN 'Lower'
+               WHEN '3' THEN 'Upper'
+               WHEN '4' THEN 'Upper'
+               WHEN '5' THEN 'Advanced Upper'
+               WHEN '6' THEN 'Graduate'
+               WHEN '7' THEN 'Graduate'
+             END AS course_division,
           j.scbcrse_title AS course_title,
           l.stvcoll_desc AS college,
           m.stvdept_desc AS department,
