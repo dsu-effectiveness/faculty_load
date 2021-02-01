@@ -10,6 +10,7 @@
                ELSE 0
                 END AS overload_indicator,
           d.stvterm_desc AS term,
+          d.stvterm_acyr_code AS academic_year,
           a.sirasgn_crn AS crn,
           c.ssbsect_crse_numb AS course_number,
           c.ssbsect_seq_numb AS section_number,
