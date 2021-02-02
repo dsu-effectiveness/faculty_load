@@ -28,6 +28,7 @@
           l.stvcoll_desc AS college,
           m.stvdept_desc AS department,
           c.ssbsect_enrl AS student_count,
+          c.ssbsect_max_enrl AS maximum_enrollment,
           c.ssbsect_tot_credit_hrs AS total_enrolled_credit_hours
      FROM saturn.sirasgn a
 LEFT JOIN saturn.spriden b
