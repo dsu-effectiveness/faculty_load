@@ -27,6 +27,7 @@
           j.scbcrse_title AS course_title,
           l.stvcoll_desc AS college,
           m.stvdept_desc AS department,
+          n.stvsubj_desc AS subject,
           c.ssbsect_enrl AS student_count,
           c.ssbsect_max_enrl AS maximum_enrollment,
           c.ssbsect_tot_credit_hrs AS total_enrolled_credit_hours
@@ -89,6 +90,8 @@ LEFT JOIN saturn.stvcoll l
        ON l.stvcoll_code = j.scbcrse_coll_code
 LEFT JOIN saturn.stvdept m
        ON m.stvdept_code = j.scbcrse_dept_code
+LEFT JOIN saturn.stvsubj n
+       ON c.ssbsect_subj_code = n.stvsubj_code
     WHERE a.sirasgn_posn IS NOT NULL
       AND a.sirasgn_suff IS NOT NULL
       -- filter out non-compensated positions
