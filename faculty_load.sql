@@ -26,8 +26,11 @@
           END AS course_division,
           j.scbcrse_title AS course_title,
           l.stvcoll_desc AS college,
-          CASE WHEN l.stvcoll_desc = 'Global & Community Outreach' THEN 'GCO'
-               WHEN l.stvcoll_desc = 'Library & Learning Services' THEN 'LLS'
+          CASE WHEN l.stvcoll_desc = 'Global & Community Outreach' THEN l.stvcoll_desc
+               WHEN l.stvcoll_desc = 'Library & Learning Services' THEN l.stvcoll_desc
+               WHEN l.stvcoll_statscan_cde3 = 'CHSS' THEN 'CHASS'
+               WHEN l.stvcoll_statscan_cde3 = 'COST' THEN 'CSET'
+               WHEN l.stvcoll_statscan_cde3 = 'COTA' THEN 'COA'
                ELSE l.stvcoll_statscan_cde3
           END AS college_abbreviation,
           m.stvdept_desc AS department,
@@ -100,6 +103,8 @@ LEFT JOIN saturn.stvsubj n
       AND a.sirasgn_suff IS NOT NULL
       -- filter out non-compensated positions
       AND a.sirasgn_posn NOT LIKE 'GNC%'
+      -- filter out faculty assignments with no students
+      AND c.ssbsect_enrl > 0
  ORDER BY a.sirasgn_pidm,
              a.sirasgn_term_code,
              a.sirasgn_crn;
