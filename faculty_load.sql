@@ -3,12 +3,12 @@
           b.spriden_last_name AS last_name,
           CASE WHEN i.ptrtenr_code IN ('T', 'O') THEN i.ptrtenr_desc
                ELSE g.ptrecls_long_desc
-                END AS instructor_status,
+          END AS instructor_status,
           k.perfasg_percent_response AS repsonsibility_percentage,
           CASE WHEN e.nbrbjob_contract_type IS NULL THEN NULL
                WHEN e.nbrbjob_contract_type = 'O' THEN 1
                ELSE 0
-                END AS overload_indicator,
+          END AS overload_indicator,
           d.stvterm_desc AS term,
           d.stvterm_acyr_code AS academic_year,
           a.sirasgn_crn AS crn,
@@ -23,9 +23,13 @@
                WHEN '5' THEN 'Advanced Upper'
                WHEN '6' THEN 'Graduate'
                WHEN '7' THEN 'Graduate'
-             END AS course_division,
+          END AS course_division,
           j.scbcrse_title AS course_title,
           l.stvcoll_desc AS college,
+          CASE WHEN l.stvcoll_desc = 'Global & Community Outreach' THEN 'GCO'
+               WHEN l.stvcoll_desc = 'Library & Learning Services' THEN 'LLS'
+               ELSE l.stvcoll_statscan_cde3
+          END AS college_abbreviation,
           m.stvdept_desc AS department,
           n.stvsubj_desc AS subject,
           c.ssbsect_enrl AS student_count,
