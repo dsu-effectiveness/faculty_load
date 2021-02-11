@@ -4,11 +4,36 @@
           CASE WHEN i.ptrtenr_code IN ('T', 'O') THEN i.ptrtenr_desc
                ELSE g.ptrecls_long_desc
           END AS instructor_status,
-          k.perfasg_percent_response AS repsonsibility_percentage,
+          -- BEGIN original workload query logic
+          CASE WHEN ( a.sirasgn_fcnt_code IN ('AD', 'FT')
+                      AND k.perfasg_workload > k.perfasg_revised_workload
+                      AND k.perfasg_revised_workload = 0 )
+               THEN k.perfasg_workload
+               WHEN ( k.perfasg_revised_workload > 0
+                      AND k.perfasg_workload > k.perfasg_revised_workload )
+               THEN k.perfasg_revised_workload
+               ELSE NULL
+          END AS assignment_workload_previous,
+          -- END original workload query logic
+           -- BEGIN revised workload query logic
+          CASE WHEN ( k.perfasg_workload != k.perfasg_revised_workload
+                      AND k.perfasg_revised_workload IS NOT NULL )
+               THEN k.perfasg_revised_workload
+               ELSE k.perfasg_workload
+          END AS assignment_workload,
+          -- END revised workload query logic
+          -- BEGIN original overload query logic
           CASE WHEN e.nbrbjob_contract_type IS NULL THEN NULL
                WHEN e.nbrbjob_contract_type = 'O' THEN 1
                ELSE 0
           END AS overload_indicator,
+          -- END original overload query logic
+           -- BEGIN revised overload query logic
+          CASE WHEN k.perfasg_workload > k.perfasg_revised_workload
+               THEN (k.perfasg_workload - k.perfasg_revised_workload)
+               ELSE 0
+          END AS assignment_overload_amount,
+          -- END revised overload query logic
           d.stvterm_desc AS term,
           d.stvterm_acyr_code AS academic_year,
           a.sirasgn_crn AS crn,
