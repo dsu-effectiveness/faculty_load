@@ -1,9 +1,19 @@
    SELECT b.spriden_id AS banner_id,
           b.spriden_first_name AS first_name,
           b.spriden_last_name AS last_name,
+          p.stvdept_desc AS instructor_department,
+          q.stvcoll_desc AS instructor_college,
+          CASE WHEN q.stvcoll_desc = 'Global & Community Outreach' THEN q.stvcoll_desc
+               WHEN q.stvcoll_desc = 'Library & Learning Services' THEN q.stvcoll_desc
+               WHEN q.stvcoll_statscan_cde3 = 'CHSS' THEN 'CHASS'
+               WHEN q.stvcoll_statscan_cde3 = 'COST' THEN 'CSET'
+               WHEN q.stvcoll_statscan_cde3 = 'COTA' THEN 'COA'
+               ELSE q.stvcoll_statscan_cde3
+          END AS instructor_college_abbreviation,
           CASE WHEN i.ptrtenr_code IN ('T', 'O') THEN i.ptrtenr_desc
                ELSE g.ptrecls_long_desc
           END AS instructor_status,
+          s.stvfctg_desc AS instructor_rank,
           -- BEGIN original workload query logic
           CASE WHEN ( a.sirasgn_fcnt_code IN ('AD', 'FT')
                       AND k.perfasg_workload > k.perfasg_revised_workload
@@ -64,6 +74,7 @@
           c.ssbsect_max_enrl AS maximum_enrollment,
           c.ssbsect_tot_credit_hrs AS total_enrolled_credit_hours
      FROM saturn.sirasgn a
+-- BEGIN JOINS
 LEFT JOIN saturn.spriden b
        ON b.spriden_pidm = a.sirasgn_pidm
       AND b.spriden_change_ind IS NULL
@@ -124,6 +135,25 @@ LEFT JOIN saturn.stvdept m
        ON m.stvdept_code = j.scbcrse_dept_code
 LEFT JOIN saturn.stvsubj n
        ON c.ssbsect_subj_code = n.stvsubj_code
+LEFT JOIN saturn.sirdpcl o
+       ON a.sirasgn_pidm = o.sirdpcl_pidm
+      AND o.sirdpcl_term_code_eff = (SELECT MAX(o1.sirdpcl_term_code_eff)
+                                     FROM saturn.sirdpcl o1
+                                    WHERE o1.sirdpcl_pidm = o.sirdpcl_pidm
+                                      AND o1.sirdpcl_term_code_eff <= d.stvterm_code)
+LEFT JOIN saturn.stvdept p
+       ON p.stvdept_code = o.sirdpcl_dept_code
+LEFT JOIN saturn.stvcoll q
+       ON q.stvcoll_code = o.sirdpcl_coll_code
+LEFT JOIN saturn.sibinst r
+       ON a.sirasgn_pidm = r.sibinst_pidm
+      AND r.sibinst_term_code_eff = (SELECT MAX(r1.sibinst_term_code_eff)
+                                       FROM saturn.sibinst r1
+                                      WHERE r1.sibinst_pidm = r.sibinst_pidm
+                                        AND r1.sibinst_term_code_eff <= d.stvterm_code)
+LEFT JOIN saturn.stvfctg s
+       ON s.stvfctg_code = r.sibinst_fctg_code
+-- END JOINS
     WHERE a.sirasgn_posn IS NOT NULL
       AND a.sirasgn_suff IS NOT NULL
       -- filter out non-compensated positions
