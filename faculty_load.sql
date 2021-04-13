@@ -93,6 +93,7 @@ LEFT JOIN posnctl.nbrbjob e
                                      AND e.nbrbjob_posn = e1.nbrbjob_posn
                                      AND e.nbrbjob_suff = e1.nbrbjob_suff
                                      AND e1.nbrbjob_begin_date < d.stvterm_end_date)
+
 LEFT JOIN posnctl.nbrjobs  f
        ON f.nbrjobs_pidm = e.nbrbjob_pidm
       AND f.nbrjobs_posn = e.nbrbjob_posn
@@ -104,17 +105,26 @@ LEFT JOIN posnctl.nbrjobs  f
                                          AND f.nbrjobs_suff = f1.nbrjobs_suff)
 LEFT JOIN payroll.ptrecls g
        ON f.nbrjobs_ecls_code = g.ptrecls_code
+
 LEFT JOIN payroll.perappt h
        ON h.perappt_pidm = a.sirasgn_pidm
+/*
+      -- this part may not be necessary for tenure status calculation
       AND h.perappt_begin_date = (SELECT MAX(h1.perappt_begin_date)
                                     FROM payroll.perappt h1
                                    WHERE h.perappt_pidm = h1.perappt_pidm
                                      AND h1.perappt_begin_date < d.stvterm_end_date)
+ */
       AND h.perappt_appt_eff_date = (SELECT MAX(h1.perappt_appt_eff_date)
                                        FROM payroll.perappt h1
-                                      WHERE h.perappt_pidm = h1.perappt_pidm)
+                                      WHERE h.perappt_pidm = h1.perappt_pidm
+                                        -- The logic here is determined
+                                        -- by the time-line of determining tenure status per appointment.
+                                        -- This could change depending on confirmation.
+                                        AND h1.perappt_appt_eff_date < d.stvterm_end_date)
 LEFT JOIN payroll.ptrtenr i
        ON i.ptrtenr_code = h.perappt_tenure_code
+
 LEFT JOIN saturn.scbcrse j
        ON j.scbcrse_crse_numb = c.ssbsect_crse_numb
       AND j.scbcrse_subj_code = c.ssbsect_subj_code
@@ -135,6 +145,7 @@ LEFT JOIN saturn.stvdept m
        ON m.stvdept_code = j.scbcrse_dept_code
 LEFT JOIN saturn.stvsubj n
        ON c.ssbsect_subj_code = n.stvsubj_code
+
 LEFT JOIN saturn.sirdpcl o
        ON a.sirasgn_pidm = o.sirdpcl_pidm
       AND o.sirdpcl_term_code_eff = (SELECT MAX(o1.sirdpcl_term_code_eff)
@@ -145,6 +156,7 @@ LEFT JOIN saturn.stvdept p
        ON p.stvdept_code = o.sirdpcl_dept_code
 LEFT JOIN saturn.stvcoll q
        ON q.stvcoll_code = o.sirdpcl_coll_code
+
 LEFT JOIN saturn.sibinst r
        ON a.sirasgn_pidm = r.sibinst_pidm
       AND r.sibinst_term_code_eff = (SELECT MAX(r1.sibinst_term_code_eff)
@@ -153,13 +165,16 @@ LEFT JOIN saturn.sibinst r
                                         AND r1.sibinst_term_code_eff <= d.stvterm_code)
 LEFT JOIN saturn.stvfctg s
        ON s.stvfctg_code = r.sibinst_fctg_code
+
 -- END JOINS
+
     WHERE a.sirasgn_posn IS NOT NULL
       AND a.sirasgn_suff IS NOT NULL
       -- filter out non-compensated positions
       AND a.sirasgn_posn NOT LIKE 'GNC%'
       -- filter out faculty assignments with no students
       AND c.ssbsect_enrl > 0
+   AND b.spriden_id = '00284560'
  ORDER BY a.sirasgn_pidm,
              a.sirasgn_term_code,
              a.sirasgn_crn;
