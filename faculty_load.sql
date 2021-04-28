@@ -22,7 +22,6 @@
                WHEN ( k.perfasg_revised_workload > 0
                       AND k.perfasg_workload > k.perfasg_revised_workload )
                THEN k.perfasg_revised_workload
-               ELSE NULL
           END AS assignment_workload_previous,
           -- END original workload query logic
            -- BEGIN revised workload query logic
@@ -75,14 +74,18 @@
           c.ssbsect_tot_credit_hrs AS total_enrolled_credit_hours
      FROM saturn.sirasgn a
 -- BEGIN JOINS
+-- pull faculty info
 LEFT JOIN saturn.spriden b
        ON b.spriden_pidm = a.sirasgn_pidm
       AND b.spriden_change_ind IS NULL
+-- pull course section info
 LEFT JOIN saturn.ssbsect c
        ON a.sirasgn_term_code = c.ssbsect_term_code
       AND a.sirasgn_crn = c.ssbsect_crn
+-- pull term info on course assignment
 LEFT JOIN saturn.stvterm d
        ON d.stvterm_code = a.sirasgn_term_code
+-- pull job info on faculty assignment (could probably be removed on next iteration)
 LEFT JOIN posnctl.nbrbjob e
        ON e.nbrbjob_pidm = a.sirasgn_pidm
       AND e.nbrbjob_posn = a.sirasgn_posn
@@ -92,20 +95,24 @@ LEFT JOIN posnctl.nbrbjob e
                                    WHERE e.nbrbjob_pidm = e1.nbrbjob_pidm
                                      AND e.nbrbjob_posn = e1.nbrbjob_posn
                                      AND e.nbrbjob_suff = e1.nbrbjob_suff
+                                     -- limit on the max for historical records
                                      AND e1.nbrbjob_begin_date < d.stvterm_end_date)
 
+-- pull job info on faculty assignment (could probably be removed on next iteration)
 LEFT JOIN posnctl.nbrjobs  f
-       ON f.nbrjobs_pidm = e.nbrbjob_pidm
-      AND f.nbrjobs_posn = e.nbrbjob_posn
-      AND f.nbrjobs_suff = e.nbrbjob_suff
+       ON f.nbrjobs_pidm = a.sirasgn_pidm
+      AND f.nbrjobs_posn = a.sirasgn_posn
+      AND f.nbrjobs_suff = a.sirasgn_suff
       AND f.nbrjobs_effective_date = (SELECT MAX(f1.nbrjobs_effective_date)
                                         FROM posnctl.nbrjobs f1
                                        WHERE f.nbrjobs_pidm = f1.nbrjobs_pidm
                                          AND f.nbrjobs_posn = f1.nbrjobs_posn
-                                         AND f.nbrjobs_suff = f1.nbrjobs_suff)
+                                         AND f.nbrjobs_suff = f1.nbrjobs_suff
+                                         -- limit on the max for historical records
+                                         AND f1.nbrjobs_effective_date < d.stvterm_end_date)
 LEFT JOIN payroll.ptrecls g
        ON f.nbrjobs_ecls_code = g.ptrecls_code
-
+-- pull tenure status info
 LEFT JOIN payroll.perappt h
        ON h.perappt_pidm = a.sirasgn_pidm
 /*
@@ -115,16 +122,24 @@ LEFT JOIN payroll.perappt h
                                    WHERE h.perappt_pidm = h1.perappt_pidm
                                      AND h1.perappt_begin_date < d.stvterm_end_date)
  */
+      -- The logic here is determined
+      -- by the time-line of determining tenure status per appointment.
+      -- This could change depending on confirmation.
       AND h.perappt_appt_eff_date = (SELECT MAX(h1.perappt_appt_eff_date)
                                        FROM payroll.perappt h1
                                       WHERE h.perappt_pidm = h1.perappt_pidm
-                                        -- The logic here is determined
-                                        -- by the time-line of determining tenure status per appointment.
-                                        -- This could change depending on confirmation.
+                                        -- limit on the max for historical records
                                         AND h1.perappt_appt_eff_date < d.stvterm_end_date)
 LEFT JOIN payroll.ptrtenr i
        ON i.ptrtenr_code = h.perappt_tenure_code
-
+-- pull faculty workload info
+LEFT JOIN payroll.perfasg k
+       ON k.perfasg_pidm = a.sirasgn_pidm
+      AND k.perfasg_posn = a.sirasgn_posn
+      AND k.perfasg_suff = a.sirasgn_suff
+      AND k.perfasg_crn = a.sirasgn_crn
+      AND k.perfasg_term_code = a.sirasgn_term_code
+-- pull course related info
 LEFT JOIN saturn.scbcrse j
        ON j.scbcrse_crse_numb = c.ssbsect_crse_numb
       AND j.scbcrse_subj_code = c.ssbsect_subj_code
@@ -132,42 +147,37 @@ LEFT JOIN saturn.scbcrse j
                                   FROM saturn.scbcrse j1
                                  WHERE j.scbcrse_crse_numb = j1.scbcrse_crse_numb
                                    AND j.scbcrse_subj_code = j1.scbcrse_subj_code
+                                   -- limit on the max for historical records
                                    AND j1.scbcrse_eff_term <= d.stvterm_code)
-LEFT JOIN payroll.perfasg k
-       ON k.perfasg_pidm = a.sirasgn_pidm
-      AND k.perfasg_posn = a.sirasgn_posn
-      AND k.perfasg_suff = a.sirasgn_suff
-      AND k.perfasg_crn = a.sirasgn_crn
-      AND k.perfasg_term_code = a.sirasgn_term_code
 LEFT JOIN saturn.stvcoll l
        ON l.stvcoll_code = j.scbcrse_coll_code
 LEFT JOIN saturn.stvdept m
        ON m.stvdept_code = j.scbcrse_dept_code
 LEFT JOIN saturn.stvsubj n
        ON c.ssbsect_subj_code = n.stvsubj_code
-
+-- pull faculty college and department info
 LEFT JOIN saturn.sirdpcl o
        ON a.sirasgn_pidm = o.sirdpcl_pidm
       AND o.sirdpcl_term_code_eff = (SELECT MAX(o1.sirdpcl_term_code_eff)
                                      FROM saturn.sirdpcl o1
                                     WHERE o1.sirdpcl_pidm = o.sirdpcl_pidm
+                                      -- limit on the max for historical records
                                       AND o1.sirdpcl_term_code_eff <= d.stvterm_code)
 LEFT JOIN saturn.stvdept p
        ON p.stvdept_code = o.sirdpcl_dept_code
 LEFT JOIN saturn.stvcoll q
        ON q.stvcoll_code = o.sirdpcl_coll_code
-
+-- pull instructor rank info
 LEFT JOIN saturn.sibinst r
        ON a.sirasgn_pidm = r.sibinst_pidm
-      AND r.sibinst_term_code_eff = (SELECT MAX(r1.sibinst_term_code_eff)
-                                       FROM saturn.sibinst r1
-                                      WHERE r1.sibinst_pidm = r.sibinst_pidm
-                                        AND r1.sibinst_term_code_eff <= d.stvterm_code)
+      ANd r.sibinst_term_code_eff = ( SELECT MAX(r2.sibinst_term_code_eff)
+                                         FROM saturn.sibinst r2
+                                        WHERE r2.sibinst_pidm = r.sibinst_pidm
+                                          -- limit on the max for historical records
+                                          AND r2.sibinst_term_code_eff <= d.stvterm_code )
 LEFT JOIN saturn.stvfctg s
        ON s.stvfctg_code = r.sibinst_fctg_code
-
 -- END JOINS
-
     WHERE a.sirasgn_posn IS NOT NULL
       AND a.sirasgn_suff IS NOT NULL
       -- filter out non-compensated positions

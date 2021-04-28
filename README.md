@@ -12,7 +12,8 @@ This query pulls all relevant information having to do with a faculty member's w
 
 - Faculty efficiency
 - Workload calculator
-- 
+- FTE Projection (currently using its own SQL query, but should be using this query)
+-
 
 <br><br>
 
