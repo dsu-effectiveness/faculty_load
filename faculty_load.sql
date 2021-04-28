@@ -174,7 +174,6 @@ LEFT JOIN saturn.stvfctg s
       AND a.sirasgn_posn NOT LIKE 'GNC%'
       -- filter out faculty assignments with no students
       AND c.ssbsect_enrl > 0
-   AND b.spriden_id = '00284560'
- ORDER BY a.sirasgn_pidm,
-             a.sirasgn_term_code,
-             a.sirasgn_crn;
+      -- good example case
+      -- AND b.spriden_id = '00284560'
+;
