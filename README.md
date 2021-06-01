@@ -13,107 +13,139 @@ This query pulls all relevant information having to do with a faculty member's w
 - Faculty efficiency
 - Workload calculator
 - FTE Projection (currently using its own SQL query, but should be using this query)
--
 
-<br><br>
+<br>
+<br>
 
 ### Table description
 <table>
-<colgroup>
-<col style="width: 15%" />
-<col style="width: 15% />
-<col style="width: 70%" />
-
-</colgroup>
-<thead>
-<tr class="header">
-<th>Field</th>
-<th>Source</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td> D-number </td>
-<td>spriden</td>
-<td></td>
-</tr>
-<tr class="even">
-<td>First name</td>
-<td>spriden</td>
-<td></td>
-</tr>
-<tr class="odd">
-<td>Last Name</td>
-<td>spriden</td>
-<td></td>
-</tr>
-<tr class="even">
-<td>Instructor Status</td>
-<td>ptrtenr, ptrecls</td>
-<td>Tenured, tenure-track, non-tenure-track, part-time faculty, adjunct</td>
-</tr>
-<tr class="odd">
-<td>percent responsibility</td>
-<td>perfasg</td>
-<td></td>
-</tr>
-<tr class="even">
-<td>overload indicator</td>
-<td>nbrbjob</td>
-<td></td>
-</tr>
-<tr class="odd">
-<td>term code</td>
-<td>sirasgn</td>
-<td></td>
-</tr>
-<tr class="even">
-<td>course record number</td>
-<td>sirasgn</td>
-<td></td>
-</tr>
-<tr class="odd">
-<td>course number</td>
-<td>sirasgn</td>
-<td></td>
-</tr>
-<tr class="even">
-<td>crn</td>
-<td>sirasgn</td>
-<td>course record number</td>
-</tr>
-<tr class="odd">
-<td>section number</td>
-<td>sirasgn</td>
-<td>
-Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-</td>
-</tr>
-<tr class="even">
-<td>course title</td>
-<td>sirasgn</td>
-<td></td>
-</tr>
-<tr class="odd">
-<td>college</td>
-<td>scbcrse</td>
-<td></td>
-</tr>
-<tr class="even">
-<td>department</td>
-<td>scbcrse</td>
-<td></td>
-</tr>
-<tr class="odd">
-<td>student count</td>
-<td>ssbsect</td>
-<td></td>
-</tr>
-<tr class="even">
-<td>total enrolled hours</td>
-<td>ssbsect</td>
-<td></td>
-</tr>
-</tbody>
+  <colgroup>
+  <col style="width: 15%" />
+  <col style="width: 15% />
+  <col style="width: 70%" />
+  </colgroup>
+  <thead>
+    <tr class="header">
+      <th>Field</th>
+      <th>Schema</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr class="odd">
+      <td> instructor_banner_id </td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr class="even">
+      <td> instructor_full name </td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr class="odd">
+      <td> instructor_assignment_department </td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr class="even">
+      <td> instructor_assignment_college </td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr class="odd">
+      <td> instructor_assignment_status </td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr class="even">
+      <td> instructor_assignment_rank </td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr class="odd">
+      <td> instructor_assignment_workload </td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr class="even">
+      <td> instructor_assignment_overload </td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr class="odd">
+      <td>course_title</td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr class="even">
+      <td>course_crn</td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr class="odd">
+      <td>course_term_code</td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr class="even">
+      <td>course_term</td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr class="odd">
+      <td>course_academic_year</td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr class="even">
+      <td>course_number</td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr class="odd">
+      <td>course_section_number</td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr class="even">
+      <td>course_division</td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr class="odd">
+      <td>course_college</td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr class="even">
+      <td>course_department</td>
+      <td></td>
+      <td></td>
+    </tr>   
+    <tr class="odd">
+      <td>course_subject</td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr class="even">
+      <td>course_student_count</td>
+      <td></td>
+      <td></td>
+    </tr>   
+    <tr class="odd">
+      <td>course_maximum_enrollment</td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr class="even">
+      <td>course_enrolled_credit_hours</td>
+      <td></td>
+      <td></td>
+    </tr>      
+     <tr class="odd">
+      <td>course_fte</td>
+      <td></td>
+      <td></td>
+    </tr>   
+  </tbody>
 </table>

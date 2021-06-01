@@ -1,0 +1,133 @@
+---
+title: "Faculty Load Validation"
+runtime: shiny
+output: html_document
+---
+
+
+```{r setup, echo=FALSE, include=FALSE}
+  library(DT)
+  source(here::here('rscripts', 'data_io_util.R'))
+  source(here::here('rscripts', 'tile_util.R'))
+  # Set this to TRUE to manually perform data refresh.
+  # Note that this might slow down load time greatly.
+  # So make sure to set it back to FALSE before republishing.
+  reload_data <- FALSE
+  if (reload_data) {
+    faculty_load_df <- get_data_from_sql("faculty_load.sql")
+    save_data_as_rds(faculty_load_df, "faculty_load.rds")
+  }
+  faculty_load_df <- load_data_from_rds("faculty_load.rds")
+```
+
+```{r mung, echo=FALSE}
+  individual_search_df <- faculty_load_df %>%
+        mutate( course_label=paste0(course_title, " ",
+                                   course_number, "-",
+                                   course_section_number, " ",
+                                   course_term ),
+                instructor_info=paste0(instructor_full_name, 
+                                       ' | D', 
+                                       instructor_banner_id) ) %>%
+        arrange(course_term_code) %>%
+        select( -c(course_title, 
+                   course_number, 
+                   course_section_number,
+                   instructor_banner_id,
+                   instructor_full_name) )
+```
+
+# {.tabset}
+
+## Search by Individual
+```{r individual_search_ui, echo=FALSE}
+    fluidRow( 
+      column(3,
+             uiOutput('college_selection_ui'),
+             uiOutput('faculty_selection_ui'),
+             uiOutput('terms_selection_ui')
+      ),
+      column(6,
+        uiOutput('individual_search_tiles')
+      )
+    )
+```
+
+```{r individual_search_server, echo=FALSE}
+  output$college_selection_ui <- renderUI({
+    colleges <- individual_search_df$instructor_assignment_college %>%
+      unique() %>%
+      sort()
+    pickerInput("college_selection",  "College Selection", 
+                colleges, 
+                options=list(`actions-box`=TRUE, `live-search`=TRUE), 
+                multiple=FALSE)
+  })
+  output$faculty_selection_ui <- renderUI({
+    faculty_base <- individual_search_df %>%
+      filter( instructor_assignment_college %in% input$college_selection )
+    faculty <- faculty_base$instructor_info %>%
+      unique() %>%
+      sort()
+    pickerInput("faculty_selection",  "Faculty Selection", 
+                faculty, 
+                options=list(`actions-box`=TRUE, `live-search`=TRUE), 
+                multiple=FALSE)
+  })
+  output$terms_selection_ui <- renderUI({
+    terms_base <- individual_search_df %>%
+      filter( instructor_assignment_college %in% input$college_selection &
+              instructor_info %in% input$faculty_selection) %>%
+              arrange(course_term_code)
+    terms <- terms_base$course_term %>%
+      unique()
+    pickerInput("terms_selection",  "Terms Selection", 
+                terms, 
+                options=list(`actions-box`=TRUE, `live-search`=TRUE), 
+                multiple=TRUE,
+                selected=terms)
+  })
+  tiles_df <- reactive({
+    req(input$college_selection,
+        input$faculty_selection,
+        input$terms_selection)
+    individual_search_df %>%
+      filter( instructor_assignment_college %in% input$college_selection &
+              instructor_info %in% input$faculty_selection &
+              course_term %in% input$terms_selection )
+  })
+  output$individual_search_tiles <- renderUI({
+    generate_tiles(tiles_df(),
+                   tiles_name="Courses",
+                   title_col="instructor_info",
+                   label_col="course_label")
+  })
+```
+
+## Full Dataset
+```{r table, echo=FALSE}
+  renderDataTable({
+      table <- DT::datatable(faculty_load_df,
+                     extensions=c('Buttons', 'FixedColumns'),
+                     options=list( pageLength=15,
+                                   dom='Bfrtip',
+                                   buttons=c('csv', 'excel'),
+                                   scrollX = TRUE,
+                                   scrollCollapse = TRUE
+                                  ),
+                     rownames=FALSE)
+      return(table)
+    },
+    # allows for download of all data in datatable (not just the current page)
+    server=FALSE)
+```
+
+
+## SQL 
+```{r echo=FALSE}
+query <- read_file( here::here("sql", "faculty_load.sql") )
+conn <- get_conn() 
+```
+
+```{sql, connection=conn, code=query, eval=FALSE}
+```
