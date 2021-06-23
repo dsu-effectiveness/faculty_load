@@ -4,9 +4,15 @@ runtime: shiny
 output: html_document
 ---
 
+<style>
+  .main-container {
+    max-width: none;
+  }
+</style>
 
 ```{r setup, echo=FALSE, include=FALSE}
   library(DT)
+  library(tidyverse)
   source(here::here('rscripts', 'data_io_util.R'))
   source(here::here('rscripts', 'tile_util.R'))
   # Set this to TRUE to manually perform data refresh.
@@ -20,7 +26,7 @@ output: html_document
   faculty_load_df <- load_data_from_rds("faculty_load.rds")
 ```
 
-```{r mung, echo=FALSE}
+```{r mung, echo=FALSE, include=FALSE}
   individual_search_df <- faculty_load_df %>%
         mutate( course_label=paste0(course_title, " ",
                                    course_number, "-",
@@ -35,9 +41,71 @@ output: html_document
                    course_section_number,
                    instructor_banner_id,
                    instructor_full_name) )
+  
+  workload_exploration_df <- faculty_load_df %>%
+    group_by(instructor_full_name, 
+             instructor_banner_id, 
+             course_term,
+             instructor_assignment_status,
+             instructor_assignment_rank) %>%
+    summarize(workload=sum(instructor_assignment_workload),
+              overload=sum(instructor_assignment_overload),
+              courses_taught=n_distinct(course_crn),
+              students=sum(course_student_count), 
+              enrolled_credit_hours=sum(course_enrolled_credit_hours),
+              fte=round( sum(course_enrolled_credit_hours)/12 ) )
+  
+  all_terms <- sort(unique(faculty_load_df$course_term))
 ```
 
 # {.tabset}
+## Workload Exploration
+
+```{r workload_exploration_ui, echo=FALSE}
+  h3("Workload Summary")
+  p("Select rows to expand and see more details in the 'Courses Taught' table below.")
+  pickerInput("terms_selection_workload_exploration",  "Terms Selection",
+              all_terms,
+              options=list(`actions-box`=TRUE, `live-search`=TRUE),
+              multiple=TRUE,
+              selected=all_terms) 
+  DT::dataTableOutput("workload_summary_table") 
+  h3("Courses Taught")
+  DT::dataTableOutput("workload_expansion_table")
+```
+
+```{r workload_exploration_server, echo=FALSE}
+  workload_exploration_df_reactive <- reactive({
+    workload_exploration_df %>%
+      filter(course_term %in% input$terms_selection_workload_exploration)
+  })
+  output$workload_summary_table <- DT::renderDataTable(workload_exploration_df_reactive(),
+                     extensions=c('Buttons', 'FixedColumns'),
+                     options=list( pageLength=10,
+                                   dom='Bfrtip',
+                                   buttons=c('csv', 'excel'),
+                                   scrollX = TRUE,
+                                   scrollCollapse = TRUE
+                                  ),
+                     rownames=FALSE)
+  expansion_df <- reactive({
+    person_selection <- workload_exploration_df[input$workload_summary_table_rows_selected,]$instructor_banner_id
+    term_selection <- workload_exploration_df[input$workload_summary_table_rows_selected,]$course_term
+    faculty_load_df %>%
+      #filter(instructor_banner_id %in% person_selection &
+      #       course_term %in% term_selection)
+      filter(paste(instructor_banner_id, course_term) %in% paste(person_selection, term_selection))
+  })
+  output$workload_expansion_table <- DT::renderDataTable( expansion_df() ,
+                     extensions=c('Buttons', 'FixedColumns'),
+                     options=list( pageLength=10,
+                                   dom='Bfrtip',
+                                   buttons=c('csv', 'excel'),
+                                   scrollX = TRUE,
+                                   scrollCollapse = TRUE
+                                  ),
+                     rownames=FALSE)
+```
 
 ## Search by Individual
 ```{r individual_search_ui, echo=FALSE}
@@ -105,7 +173,7 @@ output: html_document
 ```
 
 ## Full Dataset
-```{r table, echo=FALSE}
+```{r full_dataset_table, echo=FALSE}
   renderDataTable({
       table <- DT::datatable(faculty_load_df,
                      extensions=c('Buttons', 'FixedColumns'),
@@ -124,9 +192,9 @@ output: html_document
 
 
 ## SQL 
-```{r echo=FALSE}
+```{r sql_code, echo=FALSE}
 query <- read_file( here::here("sql", "faculty_load.sql") )
-conn <- get_conn() 
+conn <- get_conn(dsn="BRPT") 
 ```
 
 ```{sql, connection=conn, code=query, eval=FALSE}

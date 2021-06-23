@@ -4,26 +4,27 @@ library(tidyverse)
 library(odbc)
 library(DBI)
 library(janitor)
-library(keyringr)
+library(keyring)
 
 # FUNCTIONS ####
-get_conn <- function() {
-  if ( DBI::dbCanConnect(odbc::odbc(), "oracle") ) {
-    # set connection using DSN entry, if exists
-    conn <- DBI::dbConnect(odbc::odbc(), "oracle")
+get_conn <- function(dsn) {
+  # Server-side db connection with RStudio Connect
+  if ( DBI::dbCanConnect(odbc::odbc(), 
+                         DSN="oracle") ) {
+    conn <- DBI::dbConnect(odbc::odbc(), 
+                           DSN="oracle")
+    # Local db connection
   } else {
-    # otherwise use manual connection variables
     conn <- DBI::dbConnect(odbc::odbc(),
-                          Driver = "Oracle",
-                          DBQ    = "readonlybannerdb.dixie.edu:1541/BRPT",
-                          UID    = decrypt_kc_pw("dsu_banner_username"),
-                          PWD    = decrypt_kc_pw("dsu_banner_password") )
+                           DSN = dsn,
+                           UID = keyring::key_get("sis_db", "username"),
+                           PWD = keyring::key_get("sis_db", "password") )
   }
   return(conn)
 }
 
-get_data_from_sql <- function(file_name) {
-  conn <- get_conn()
+get_data_from_sql <- function(file_name, dsn="BRPT") {
+  conn <- get_conn(dsn)
   df <- dbGetQuery( conn, read_file( here::here('sql', file_name) ) ) %>% 
     mutate_if(is.factor, as.character) %>% 
     clean_names() %>% 
